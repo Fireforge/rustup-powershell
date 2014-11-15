@@ -1,7 +1,7 @@
 # Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 # http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 # <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-# option. This }le may not be copied, modi}ed, or distributed
+# option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
 function Expand-ZIPFile($file, $destination)
@@ -9,15 +9,8 @@ function Expand-ZIPFile($file, $destination)
     $shell = new-object -com shell.application
     echo "Zip file: $file"
     $zip = $shell.namespace($file)
-    if (Test-Path "$destination")
-    {
-        $dst = $shell.namespace($destination)
-    }
-    else
-    {
-        mkdir $destination
-        $dst = $shell.namespace($destination)
-    }
+    if (-Not (Test-Path "$destination")) { New-Item $destination -ItemType Directory -Force}
+    $dst = $shell.namespace($destination)
     $dst.Copyhere($zip.items())
 }
 
@@ -32,14 +25,13 @@ function pause()
     $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
-
 Import-Module BitsTransfer
 
-$TMP_DIR = "c:\temp\rustup-tmp-install3"
-rm $TMP_DIR -Recurse
-mkdir $TMP_DIR
+$TMP_DIR = "c:\temp\rustup-tmp-install"
+New-Item $TMP_DIR -ItemType Directory -Force
+Set-Location $TMP_DIR
 
-# 1: Detect 32 or 64 bit
+# Detect 32 or 64 bit
 switch ([IntPtr]::Size)
 { 
     4 {
@@ -55,32 +47,39 @@ switch ([IntPtr]::Size)
     default {echo "ERROR: The processor architecture could not be determined." ; exit 1}
 }
 
-# 2: Detect/install 7zip
+# Detect/install 7zip
 $7zip_dl= "http://downloads.sourceforge.net/sevenzip/7za920.zip"
 $7z_path = "$TMP_DIR\7za920.zip"
-Start-BitsTransfer $7zip_dl $7z_path -Description "Downloading 7zip"
-Expand-ZIPFile –File $7z_path –Destination "$TMP_DIR"
 $7z = "$TMP_DIR\7za.exe"
+if(Test-Path $7z) { echo "7zip found" }
+else {
+    Start-BitsTransfer $7zip_dl $7z_path -Description "Downloading 7zip"
+    Expand-ZIPFile -File $7z_path -Destination "$TMP_DIR"
+}
 
-# 3: Download the rust and cargo binaries
+# Download the latest rust and cargo binaries
 $rust_installer = "$TMP_DIR\rust_install.exe"
 $cargo_binary = "$TMP_DIR\cargo_install.tar.gz"
 
-Start-BitsTransfer $rust_dl $rust_installer -Description "Downloading Rust"
+Start-BitsTransfer $rust_dl $rust_installer -Description "Downloading the lastest Rust nightly - this may take a while"
 
-Start-BitsTransfer $cargo_dl $cargo_binary -Description "Downloading Cargo"
+Start-BitsTransfer $cargo_dl $cargo_binary -Description "Downloading the latest Cargo nightly - this may take a while"
 
 echo "Downloads complete."
 
-# 4: Install the rust binaries
+# Install the rust binaries
 Start-Process $rust_installer -Wait
 # Looking for the dir which has rustc in it, which may fail if the user doesn't add rust\bin to
 # their path or for multiple rust versions
 $rust_bin = which "rustc.exe" | Split-Path
+rustc -v
+echo "Rust is Ready!"
 
-# 5: Place the cargo binaries in the rust bin folder
-Start-Process .\7za.exe -ArgumentList "e .\cargo_bin.tar.gz" -Wait
-Start-Process .\7za.exe -ArgumentList "e .\cargo_bin.tar *.exe -r" -Wait
-mv "$TMP_DIR\cargo.exe" $rust_bin
+# Place the cargo binaries in the rust bin folder
+Start-Process .\7za.exe -ArgumentList "e $cargo_binary -y" -NoNewWindow -Wait
+Start-Process .\7za.exe -ArgumentList "e .\cargo_install.tar *.exe -r -y" -NoNewWindow -Wait
+Copy-Item "$TMP_DIR\cargo.exe" $rust_bin
+cargo -V
+echo "Cargo is Ready!"
 
-pause
+cmd /c pause
