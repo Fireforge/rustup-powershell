@@ -41,12 +41,12 @@ switch ([IntPtr]::Size)
 }
 
 # Detect/install 7zip
-$7zip_dl= "http://downloads.sourceforge.net/sevenzip/7za920.zip"
+$7zip_dl= "http://downloads.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip"
 $7z_path = "$TMP_DIR\7za920.zip"
 $7z = "$TMP_DIR\7za.exe"
 if(Test-Path $7z) { echo "7zip found" }
 else {
-    Start-BitsTransfer $7zip_dl $7z_path -Description "Downloading 7zip"
+    Start-BitsTransfer $7zip_dl $7z_path -DisplayName "Downloading 7zip" -Description $7zip_dl
     Expand-ZIPFile -File $7z_path -Destination "$TMP_DIR"
 }
 
@@ -54,9 +54,9 @@ else {
 $rust_installer = "$TMP_DIR\rust_install.exe"
 $cargo_binary = "$TMP_DIR\cargo_install.tar.gz"
 
-Start-BitsTransfer $rust_dl $rust_installer -Description "Downloading the lastest Rust nightly - this may take a while"
+Start-BitsTransfer $rust_dl $rust_installer -DisplayName "Downloading the lastest Rust nightly - this may take a while" -Description $rust_dl 
 
-Start-BitsTransfer $cargo_dl $cargo_binary -Description "Downloading the latest Cargo nightly - this may take a while"
+Start-BitsTransfer $cargo_dl $cargo_binary -DisplayName "Downloading the latest Cargo nightly - this may take a while" -Description $cargo_dl
 
 echo "Downloads complete."
 
