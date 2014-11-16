@@ -7,7 +7,6 @@
 function Expand-ZIPFile($file, $destination)
 {
     $shell = new-object -com shell.application
-    echo "Zip file: $file"
     $zip = $shell.namespace($file)
     if (-Not (Test-Path "$destination")) { New-Item $destination -ItemType Directory -Force}
     $dst = $shell.namespace($destination)
@@ -19,16 +18,10 @@ function which($name)
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
-function pause()
-{
-    Write-Host "Press any key to continue ..."
-    $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-}
-
 Import-Module BitsTransfer
 
-$TMP_DIR = "c:\temp\rustup-tmp-install"
-New-Item $TMP_DIR -ItemType Directory -Force
+$TMP_DIR = "$env:temp\rustup-tmp-install"
+New-Item $TMP_DIR -ItemType Directory -Force | Out-Null
 Set-Location $TMP_DIR
 
 # Detect 32 or 64 bit
