@@ -63,8 +63,9 @@ echo "Downloads complete."
 # Install the rust binaries
 Start-Process $rust_installer -Wait
 
-# Refresh path for this process after installation (the Rust installer uses the system PATH, not user)
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+# Refresh path for this process after installation
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User")
+$env:Path += ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
 
 # Looking for the dir which has rustc in it, which may fail if the user doesn't add rust\bin to
 # their path or for multiple rust versions
