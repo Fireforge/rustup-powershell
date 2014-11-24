@@ -13,7 +13,7 @@ The script is designed to work on any Windows with Powershell 2.0, but is curren
 
 The one liner:
 
-`(new-object System.Net.WebClient).Downloadfile("https://raw.githubusercontent.com/Fireforge/rustup-powershell/master/rustup.ps1", "rustup.ps1") ; .\rustup.ps1`
+`Start-BitsTransfer "https://raw.githubusercontent.com/Fireforge/rustup-powershell/master/rustup.ps1" "rustup.ps1" ; .\rustup.ps1`
 
 The script is still very fresh, please report bugs!
 
