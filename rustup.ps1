@@ -30,7 +30,7 @@ switch ([IntPtr]::Size)
     4 {
         $arch = 32
         $rust_dl = "https://static.rust-lang.org/dist/rust-nightly-i686-pc-windows-gnu.exe"
-        $cargo_dl = "https://static.rust-lang.org/cargo-dist/cargo-nightly-i686-w64-mingw32.tar.gz"
+        $cargo_dl = "https://static.rust-lang.org/cargo-dist/cargo-nightly-i686-pc-windows-gnu.tar.gz"
     } 
     8 {
         $arch = 64
