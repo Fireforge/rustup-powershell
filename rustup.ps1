@@ -4,17 +4,19 @@
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-function Expand-ZIPFile($file, $destination)
-{
+function Expand-ZIPFile($file, $destination) {
     $shell = new-object -com shell.application
     $zip = $shell.namespace($file)
-    if (-Not (Test-Path "$destination")) { New-Item $destination -ItemType Directory -Force}
+
+    if (-Not (Test-Path "$destination")) {
+        New-Item $destination -ItemType Directory -Force
+    }
+
     $dst = $shell.namespace($destination)
     $dst.Copyhere($zip.items())
 }
 
-function Acquire-7z()
-{
+function Acquire-7z() {
     $7z_path = ""
 
     # Check for user installation, then machine installation.
@@ -47,8 +49,7 @@ function Acquire-7z()
     $7z_path
 }
 
-function which($name)
-{
+function which($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
@@ -59,8 +60,7 @@ New-Item $TMP_DIR -ItemType Directory -Force | Out-Null
 Set-Location $TMP_DIR
 
 # Detect 32 or 64 bit
-switch ([IntPtr]::Size)
-{ 
+switch ([IntPtr]::Size) { 
     4 {
         $arch = 32
         $rust_dl = "https://static.rust-lang.org/dist/rust-nightly-i686-pc-windows-gnu.exe"
@@ -71,7 +71,7 @@ switch ([IntPtr]::Size)
         $rust_dl = "https://static.rust-lang.org/dist/rust-nightly-x86_64-pc-windows-gnu.exe"
         $cargo_dl = "https://static.rust-lang.org/cargo-dist/cargo-nightly-x86_64-w64-mingw32.tar.gz"
     }
-    default {echo "ERROR: The processor architecture could not be determined." ; exit 1}
+    default { echo "ERROR: The processor architecture could not be determined."; exit 1 }
 }
 
 $7z = Acquire-7z
@@ -107,3 +107,4 @@ cargo -V
 echo "Cargo is Ready!"
 
 cmd /c pause
+
