@@ -13,6 +13,40 @@ function Expand-ZIPFile($file, $destination)
     $dst.Copyhere($zip.items())
 }
 
+function Acquire-7z()
+{
+    $7z_path = ""
+
+    # Check for user installation, then machine installation.
+    if (Test-Path -Path HKCU:\Software\7-Zip) {
+        $7z_path = (Get-ItemProperty -Path HKCU:\Software\7-Zip).Path
+    } elseif (Test-Path -Path HKLM:\Software\7-Zip) {
+        $7z_path = (Get-ItemProperty -Path HKLM:\Software\7-Zip).Path
+    }
+
+    # Ensure the path from the registry is valid.
+    if ($7z_path -and (Test-Path "$7z_path\7z.exe")) {
+        $7z_path += "\7z.exe" # The path from the registry will probably end with a \, but having 2 is OK
+        Write-Host "Using local 7-Zip at $7z_path"
+    } else {
+        $7z_url = "http://downloads.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip"
+        $7z_tmp = "$TMP_DIR\7za920.zip"
+        $7z_ex = "$TMP_DIR\7za.exe"
+
+        # Did we already download and extract it?
+        if (!(Test-Path $7z_ex)) {
+            # Download 7zip
+            Start-BitsTransfer $7z_url $7z_tmp -DisplayName "Downloading 7-Zip" -Description $7z_url
+            Expand-ZIPFile -File $7z_tmp -Destination "$TMP_DIR"
+        }
+
+        $7z_path = $7z_ex
+        Write-Host "Using downloaded 7-Zip at $7z_path"
+    }
+
+    $7z_path
+}
+
 function which($name)
 {
     Get-Command $name | Select-Object -ExpandProperty Definition
@@ -40,15 +74,7 @@ switch ([IntPtr]::Size)
     default {echo "ERROR: The processor architecture could not be determined." ; exit 1}
 }
 
-# Detect/install 7zip
-$7zip_dl= "http://downloads.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip"
-$7z_path = "$TMP_DIR\7za920.zip"
-$7z = "$TMP_DIR\7za.exe"
-if(Test-Path $7z) { echo "7zip found" }
-else {
-    Start-BitsTransfer $7zip_dl $7z_path -DisplayName "Downloading 7zip" -Description $7zip_dl
-    Expand-ZIPFile -File $7z_path -Destination "$TMP_DIR"
-}
+$7z = Acquire-7z
 
 # Download the latest rust and cargo binaries
 $rust_installer = "$TMP_DIR\rust_install.exe"
@@ -74,8 +100,8 @@ rustc -v
 echo "Rust is Ready!"
 
 # Place the cargo binaries in the rust bin folder
-Start-Process .\7za.exe -ArgumentList "e $cargo_binary -y" -NoNewWindow -Wait
-Start-Process .\7za.exe -ArgumentList "e .\cargo_install.tar *.exe -r -y" -NoNewWindow -Wait
+Start-Process $7z -ArgumentList "e $cargo_binary -y" -NoNewWindow -Wait
+Start-Process $7z -ArgumentList "e .\cargo_install.tar *.exe -r -y" -NoNewWindow -Wait
 Copy-Item "$TMP_DIR\cargo.exe" $rust_bin
 cargo -V
 echo "Cargo is Ready!"
