@@ -27,8 +27,8 @@ function Acquire-7z() {
     }
 
     # Ensure the path from the registry is valid.
-    if ($7z_path -and (Test-Path "$7z_path\7z.exe")) {
-        $7z_path += "\7z.exe" # The path from the registry will probably end with a \, but having 2 is OK
+    if ($7z_path -and (Test-Path (Join-Path $7z_path "7z.exe"))) {
+        $7z_path = Join-Path $7z_path "7z.exe"
         Write-Host "Using local 7-Zip at $7z_path"
     } else {
         $7z_url = "http://downloads.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip"
@@ -74,7 +74,7 @@ switch ([IntPtr]::Size) {
     default { echo "ERROR: The processor architecture could not be determined."; exit 1 }
 }
 
-$7z = Acquire-7z
+$7z = Acquire-7z # Check/Download 7-Zip
 
 # Download the latest rust and cargo binaries
 $rust_installer = "$TMP_DIR\rust_install.exe"
