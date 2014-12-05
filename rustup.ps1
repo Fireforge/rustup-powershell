@@ -99,10 +99,25 @@ $rust_bin = which "rustc.exe" | Split-Path
 rustc -v
 echo "Rust is Ready!"
 
-# Place the cargo binaries in the rust bin folder
+
+# Extract the Cargo binary with 7-Zip
 Start-Process $7z -ArgumentList "e $cargo_binary -y" -NoNewWindow -Wait
 Start-Process $7z -ArgumentList "e .\cargo_install.tar *.exe -r -y" -NoNewWindow -Wait
-Copy-Item "$TMP_DIR\cargo.exe" $rust_bin
+
+try {
+    # Attempt to copy Cargo next to rustc.  If this fails, it's because the user installed Rust to a privileged path.
+    Copy-Item "$TMP_DIR\cargo.exe" $rust_bin -ErrorAction Stop
+} catch {
+    # Unprivileged copy failed, so do a privileged copy instead.  This will perform a UAC prompt.
+    # This is unfortunately the cleanest way of achieving this.
+    # Gotcha #1: '-Verb RunAs' and '-NoNewWindow' are incompatible, so instead we use '-WindowStyle Hidden'
+    $proc = Start-Process powershell -ArgumentList "-Command &{Copy-Item \`"$TMP_DIR\cargo.exe\`" \`"$rust_bin\`"}" -Verb RunAs -WindowStyle Hidden -PassThru
+    
+    # Gotcha #2: '-Verb RunAs' is ALSO incompatible with "-Wait"... yuck.
+    # Spin for a bit so we don't try to cargo -V until it has actually been copied.
+    do { Start-Sleep -m 50 } until ($proc.HasExited)
+}
+
 cargo -V
 echo "Cargo is Ready!"
 
