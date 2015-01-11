@@ -3,6 +3,8 @@ rustup-powershell
 
 A rustup equivalent for Windows using Powershell
 
+### **Rust's installer now installs Cargo along with it. If you wanted to use this script just for that reason, it's no longer necessary.**
+
 This is an attempt to provide a `rustup.sh` equivalent for Windows. `rustup.ps1` will download the latest Windows Rust and Cargo binaries, run the Rust installer, and then places `cargo.exe` in the Rust's bin directory.
 
 The script is designed to work on any Windows with Powershell 2.0, but is currently only confirmed on the following:
